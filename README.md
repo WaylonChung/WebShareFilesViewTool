@@ -1,2 +1,2 @@
 # WebShareFilesViewTool
-WebShareFilesViewTool, a simple file sharing program on web. This program is deployed on a host in a local area network or public network. Clients can view shared files and download them through any browser. It supports folders.
+WebShareFilesViewTool, a simple file sharing program on web. This program is deployed on a host in a local area network or public network. Clients can view shared files and download them through any browser. It supports folders.When downloading a folder, it will be automatically compressed. Access to files requires password verification. The  disk manager only needs to update the files in the samba shared folder to update the background files. The program will automatically index and generate a new file list.
