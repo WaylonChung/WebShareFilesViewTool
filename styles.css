@@ -1,0 +1,136 @@
+<style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        .login-box {
+            width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .file-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .file-info {
+            margin-left: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .dir {
+            color: #1a73e8;
+            font-weight: bold;
+        }
+
+        .file {
+            color: #34a853;
+        }
+
+        button {
+            margin-left: 15px;
+            padding: 3px 8px;
+            cursor: pointer;
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        #file-browser {
+            display: none;
+        }
+
+        /* 原有样式保持不变 */
+        .admin-link {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+        }
+
+        .dir-icon {
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .back-btn {
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+        }
+
+        /*弹出框专用*/
+        /* 遮罩层 */
+        #overlay {
+            position: fixed;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            font-size: 16px;
+            /* IE9以下不支持rgba模式 */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* 兼容IE8及以下 */
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#7f000000, endColorstr=#7f000000);
+            display: none;
+        }
+
+        /* 弹出框主体 */
+        .popup {
+            background-color: #ffffff;
+            max-width: 400px;
+            min-width: 200px;
+            height: 240px;
+            border-radius: 5px;
+            margin: 100px auto;
+            text-align: center;
+        }
+
+        /* 弹出框的标题 */
+        .popup_title {
+            height: 80px;
+            line-height: 60px;
+            border-bottom: solid 1px #cccccc;
+        }
+
+        /* 弹出框的内容 */
+        .popup_content {
+            height: 70px;
+            line-height: 70px;
+			margin-left:0px;
+			margin-right:0px;
+        }
+
+        /* 弹出框的按钮栏 */
+        .popup_btn {
+            padding-bottom: 1px;
+        }
+
+        /* 弹出框的按钮 */
+        .popup_btn button {
+            color: #778899;
+            width: 40%;
+            height: 40px;
+            cursor: pointer;
+            border: solid 1px #cccccc;
+            border-radius: 5px;
+            margin: 5px 10px;
+            color: #ffffff;
+            background-color: #337ab7;
+        }
+		progress 
+		{
+          width: 300px;
+        }
+
+    </style>

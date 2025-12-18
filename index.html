@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<head>
+    <title>Eternal文件浏览器</title>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+<div id="login-box" class="login-box">
+    <h2>请输入访问密码</h2>
+    <input type="password" id="password" placeholder="密码" onkeyup="handleEnter(event)">
+    <button onclick="verifyPassword()">登录</button>
+    <p id="error-msg" style="color:red;"></p>
+</div>
+
+<div id="file-browser">
+    <h1>Chung文件浏览器</h1>
+    <div class="breadcrumb" id="path-nav"></div>
+    <button onclick="goBack()">返回上级目录</button>
+    <div id="file-list"></div>
+</div>
+<div id="DivAccessLog">
+    <a href="admin_logs.php" class="admin-link">查看访问日志</a>
+</div>
+
+
+<div id="overlay">
+    <div class="popup">
+        <p class="popup_title">压缩进度</p>
+        <p class="popup_content">
+        <progress  id="progressBar" value="0" max="100"></progress>
+        <span id="progressValue">0.00%</span>
+        </p>
+        <!--        <p class="popup_content">学会制作弹出框了吗？</p>-->
+        <div class="popup_btn">
+            <button class="cancelBtn" onclick="hidePopup()">取消压缩</button>
+        </div>
+    </div>
+</div>
+<!--JS脚本-->
+<script>
+
+    let passwordErrorCount = 0;
+    let currentPath = "NetDisk";
+    let pathHistory = [];
+    var intervalRunFlag=false;
+
+    document.getElementById('DivAccessLog').style.display = 'none';
+
+    function goBack()
+    {
+        if (pathHistory.length > 0)
+        {
+            currentPath = pathHistory.pop();
+            loadDir(currentPath);
+        }
+    }
+
+    ////////////////////访问日志/////////////////////////////////
+
+    fetch('log_access.php')
+        .then(response => response.text())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+
+    ////////////////密码验证//////////////////////////
+
+    function verifyPassword()
+    {
+        const password = document.getElementById('password').value;
+        if (password === 'cleanroom')
+        //if (1)
+        {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('file-browser').style.display = 'block';
+            document.getElementById('DivAccessLog').style.display = 'block';
+            loadDir("NetDisk");
+        } else
+        {
+            passwordErrorCount++;
+            document.getElementById('error-msg').innerText = '密码错误，错误次数' + passwordErrorCount.toString();
+        }
+
+    }
+
+    function handleEnter(event)
+    {
+        if (event.key === 'Enter')
+        {
+            verifyPassword();
+        }
+    }
+
+
+    //////////////格式化大小/////////////////////////////
+
+    function formatSize(bytes)
+    {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    ////////////格式化修改日期///////////////////////////////
+
+    function formatDate(timestamp)
+    {
+        return new Date(timestamp * 1000).toLocaleString();
+    }
+
+    //////////////加载文件夹路径///////////////////////
+
+    function loadDir(path = "")
+    {
+        if (path !== currentPath)
+        {
+            pathHistory.push(currentPath);
+        }
+        currentPath = path;
+
+
+        fetch('filebrowser.php?path=' + encodeURIComponent(path))
+            .then(response => response.json())
+            .then(data =>
+            {
+                ///////////////////////////添加目录路径//////////////////////////
+                let navHtml = '<a href="#" onclick="loadDir("\NetDisk")"></a>';
+                let currentPath = '';
+
+
+                if (path)
+                {
+                    path.split('/').forEach(dir =>
+                    {
+                        if (!dir) return;
+                        currentPath += (currentPath ? '/' : '') + dir;
+                        navHtml += ` / <a href="#" onclick="loadDir('${currentPath}')">${dir}</a>`;
+                    });
+                }
+                document.getElementById('path-nav').innerHTML = navHtml;
+                ////////////////////文件夹按钮添加/////////////////////////
+                let html = '';
+                data.dirs.forEach(dir =>
+                {
+                    const fullPath = path ? `${path}/${dir.name}` : dir.name;
+                    html += `<div class="file-item dir">
+                           <span class="dir-icon" onclick="loadDir('${fullPath}')">📁${dir.name}</span>
+
+                            <div class="file-info">
+                                文件数: ${dir.fileCount} | 
+                                大小: ${formatSize(dir.size)} | 
+                                修改日期: ${formatDate(dir.mtime)}
+                            </div>
+                       
+                            <button onclick="download('${fullPath}', true)">下载</button>
+                        </div>`;
+                });
+
+                data.files.forEach(file =>
+                {
+                    const fullPath = path ? `${path}/${file.name}` : file.name;
+                    html += `<div class="file-item file">
+                            📄 ${file.name}
+                            <div class="file-info">
+                                大小: ${formatSize(file.size)} | 
+                                修改日期: ${formatDate(file.mtime)}
+                            </div>
+                            <button onclick="download('${fullPath}', false)">下载</button>
+                        </div>`;
+                });
+
+                document.getElementById('file-list').innerHTML = html || '<div>空目录</div>';
+            });
+    }
+
+
+    function download(path, isDir)
+    {
+        //window.location.href = 'download.php?path=' +encodeURIComponent(path) + '&isDir=' + (isDir ? '1' : '0');
+        // window.location.href ="download.html";
+        if(isDir===true)
+        {
+		/*
+            showPopup();
+            // 获取进度条元素
+            const progressBar = document.getElementById('progressBar');
+            const progressValue = document.getElementById('progressValue');
+            // 初始进度值
+            let progress = 0;
+            let finalProgress=0;
+
+            // 设置定时器，每100毫秒更新一次进度条
+            const intervalId = setInterval(() =>
+            {
+			
+			
+			
+			 fetch('download.php?compress_progress=1')
+                    .then(res => res.json())
+                    .then(data => 
+					{
+                        
+									progressValue.innerText="dfaf";
+
+						
+						progressValue.innerText=data.progress.toString();
+                        
+                   
+					});
+						
+	
+			    
+                // 检查是否达到最大值
+                if ((progress >= 1000)||(intervalRunFlag===false))
+                {
+                    clearInterval(intervalId); // 如果达到100%，停止定时器
+                }
+                else
+                {
+                    // 增加进度，每次增加1%
+                    progress += 1;
+                    finalProgress=progress*0.5;
+                    progressBar.value = finalProgress; // 更新进度条的值
+                    var randomNumber = Math.random();
+                    randomNumber+=finalProgress;
+                    if(randomNumber>99.99)
+                    {
+                        randomNumber=99.99;
+                    }
+                    //progressValue.innerText=randomNumber.toFixed(2)+'%';
+
+                }
+            }, 500); // 100毫秒执行一次
+			
+			*/
+            window.location.href = 'download.php?path=' +encodeURIComponent(path) + '&isDir=' + (isDir ? '1' : '0');
+		   
+		   
+
+        }
+        else
+        {
+            window.location.href = 'download.php?path=' +encodeURIComponent(path) + '&isDir=' + (isDir ? '1' : '0');
+        }
+    }
+
+    ///弹出框用/////////
+    function showPopup()
+    {
+        var overlay = document.getElementById("overlay");
+        overlay.style.display = "block";
+        intervalRunFlag=true;
+    }
+
+    function hidePopup()
+    {
+        var overlay = document.getElementById("overlay");
+        overlay.style.display = "none";
+        intervalRunFlag=false;
+    }
+
+
+
+</script>
+</body>
+</html>
